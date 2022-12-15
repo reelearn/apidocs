@@ -10,6 +10,8 @@ security:
 paths:
   /healthcheck:
     get:
+      x-eov-operation-id: main
+      x-eov-operation-handler: serverHealthcheck/elbHealthcheck/index
       security: [] # Override global security headers!
       description: Basic healthcheck
       responses:
@@ -28,6 +30,8 @@ paths:
       x-codegen-request-body-name: action
   /action:
     post:
+      x-eov-operation-id: main
+      x-eov-operation-handler: serverHealthcheck/elbHealthcheck/index
       description: Triggers an event for a media content, eg. a Like/Dislike event.
       requestBody:
         description: Trigger an action event (WIP)
@@ -52,6 +56,8 @@ paths:
       x-codegen-request-body-name: action
   /topic/{topicId}:
     get:
+      x-eov-operation-id: main
+      x-eov-operation-handler: reelearnMedia/fetchTopics/index
       security: [] # Override global security headers!
       description: Fetches a list of videos for the current topic context
       parameters:
@@ -96,6 +102,8 @@ paths:
       x-codegen-request-body-name: action
   /storeCompanySecretKey:
     post:
+      x-eov-operation-id: main
+      x-eov-operation-handler: serverHealthcheck/elbHealthcheck/index
       description: Admin API to store an external company's secret
       requestBody:
         description: Save a company's secrets
@@ -120,6 +128,9 @@ paths:
       x-codegen-request-body-name: action
   /createUserSession:
     post:
+      security: [] # Override global security headers!
+      x-eov-operation-id: main
+      x-eov-operation-handler: reelearnUsers/createSession/index
       description: Initiate a new session and token creation for a user trying to log in
       requestBody:
         description: Verify user's company information
@@ -144,6 +155,8 @@ paths:
       x-codegen-request-body-name: action
   /contentFeedback:
     post:
+      x-eov-operation-id: main
+      x-eov-operation-handler: serverHealthcheck/elbHealthcheck/index
       description: Submits a written feedback for the current media being viewed
       requestBody:
         description: Trigger a submit feedback event (WIP)
@@ -168,28 +181,26 @@ paths:
       x-codegen-request-body-name: action
   /videos:
     get:
+      x-eov-operation-id: main
+      x-eov-operation-handler: reelearnMedia/fetchVideos/index
       security: [] # Override global security headers!
       description: Fetches a list of videos for the current user context
       parameters:
-          - in: query
-            name: page
-            schema:
-              type: number
-            description: Used for pagination of our media on the client switched
-          - in: query
-            name: size
-            schema:
-              type: number
-            description: Number of videos requested by the client
-    # post:
-    #   description: Fetches a list of videos for the current user context
-    #   requestBody:
-    #     description: Trigger a fetch more videos call based on the current context
-    #     content:
-    #       application/json:
-    #         schema:
-    #           $ref: '#/components/schemas/fetchVideosRequest'
-    #     required: true
+        - in: query
+          name: page
+          schema:
+            type: number
+          description: Used for pagination of our media on the client switched
+        - in: query
+          name: size
+          schema:
+            type: number
+          description: Number of videos requested by the client
+        - in: query
+          name: slotId
+          schema:
+            type: number
+          description: Videos to fetch for a particular slot
       responses:
         200:
           description: Fetch videos success response (WIP)
@@ -206,8 +217,21 @@ paths:
       x-codegen-request-body-name: action
   /testing:
     post:
+      x-eov-operation-id: main
+      x-eov-operation-handler: serverHealthcheck/elbHealthcheck/index
       # security: [] # Override global security headers!
       description: testing
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: string
+          description: Testing
+        - in: query
+          name: size
+          schema:
+            type: number
+          description: Testing
       requestBody:
         description: testing
         content:
@@ -231,6 +255,7 @@ paths:
       x-codegen-request-body-name: action
 components:
   schemas:
+
     newActionRequest:
       required:
       - contentId
@@ -258,6 +283,7 @@ components:
           example: false
           default: false
       additionalProperties: false
+
     contentFeedbackRequest:
       required:
       - action
@@ -401,68 +427,76 @@ components:
           type: array
           minItems: 0
           items:
-            type: object
-            properties:
-              media_type:
-                type: string
-                enum: ['video']
-              source: 
-                type: array
-                items:
-                  type: object
-                  additionalProperties: false
-                  properties:
-                    src: 
-                      type: string
-                      example: 'http://content.reelearn.ai/videos/Whatsapp%20Videos/19/19%20(Hindi%20Video)%20480p.mp4'
-                    mime_type:
-                      type: string
-                      example: video/mp4
-                    srclang:
-                      type: string
-                      enum: ['en', 'english', 'hi', 'hindi']
-                    default:
-                      type: boolean
-              textTracks:
-                type: array
-                items:
-                  type: object
-                  additionalProperties: false
-                  properties:
-                    kind:
-                      type: string
-                      example: 'subtitles'
-                    label:
-                      type: string
-                      example: 'English'
-                    srclang:
-                      type: string
-                      enum: ['en', 'english', 'hi', 'hindi']
-                    src: 
-                      type: string
-                      example: 'http://content.reelearn.ai/videos/Whatsapp%20Videos/vtt/19%20(English%20Subtitle).vtt'
-                    default:
-                      type: boolean
-              poster:
-                type: string
-                example: 'http://content.reelearn.ai/videos/firstframe/19_Hindi_Video_zhnulq.jpg'
-              likes:
-                type: number
-                example: 34
-              comments:     
-                type: number
-                example: 69
-              liked: 
-                type: boolean
-              disliked:
-                type: boolean
-                nullable: true
-              icon_url:
-                type: string
-              description:
-                type: string
-              title:
-                type: string
+            type: array
+            minItems: 0
+            items:
+              type: object
+              required:
+                - content_id
+                - media_type
+              properties:
+                content_id: 
+                  type: number
+                media_type:
+                  type: string
+                  enum: ['video']
+                source: 
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      src: 
+                        type: string
+                        example: 'http://content.reelearn.ai/videos/Whatsapp%20Videos/19/19%20(Hindi%20Video)%20480p.mp4'
+                      mime_type:
+                        type: string
+                        example: video/mp4
+                      srclang:
+                        type: string
+                        enum: ['en', 'english', 'hi', 'hindi']
+                      default:
+                        type: boolean
+                textTracks:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      kind:
+                        type: string
+                        example: 'subtitles'
+                      label:
+                        type: string
+                        example: 'English'
+                      srclang:
+                        type: string
+                        enum: ['en', 'english', 'hi', 'hindi']
+                      src: 
+                        type: string
+                        example: 'http://content.reelearn.ai/videos/Whatsapp%20Videos/vtt/19%20(English%20Subtitle).vtt'
+                      default:
+                        type: boolean
+                poster:
+                  type: string
+                  example: 'http://content.reelearn.ai/videos/firstframe/19_Hindi_Video_zhnulq.jpg'
+                likes:
+                  type: number
+                  example: 34
+                comments:     
+                  type: number
+                  example: 69
+                liked: 
+                  type: boolean
+                disliked:
+                  type: boolean
+                  nullable: true
+                icon_url:
+                  type: string
+                description:
+                  type: string
+                title:
+                  type: string
 
     fetchTopicSuccessResponse:
       type: object
